@@ -138,3 +138,8 @@ ssh -N -L 9119:localhost:9119 -L 8642:localhost:8642 <ユーザー名>@<サー�
   - `data/.env`（APIキー等）
   - `data/sessions/`, `data/memories/`, `data/state.db*`（セッション・記憶・DB）
   - `workspace/*`（作業ファイル・ダウンロードファイル）
+
+## ライセンス
+
+[MIT License](LICENSE)
+
