@@ -1,0 +1,48 @@
+services:
+  gateway:
+    build:
+      context: ./hermes-agent
+      dockerfile: Dockerfile
+    image: hermes-agent:local
+    container_name: hermes
+    restart: unless-stopped
+    network_mode: host
+    working_dir: /workspace
+    volumes:
+      - ./data:/opt/data
+      - ./workspace:/workspace
+    environment:
+      - HERMES_UID=${HERMES_UID:-1000}
+      - HERMES_GID=${HERMES_GID:-1000}
+    command: ["gateway", "run"]
+
+  dashboard:
+    image: hermes-agent:local
+    container_name: hermes-dashboard
+    restart: unless-stopped
+    network_mode: host
+    working_dir: /workspace
+    depends_on:
+      - gateway
+    volumes:
+      - ./data:/opt/data
+      - ./workspace:/workspace
+    environment:
+      - HERMES_UID=${HERMES_UID:-1000}
+      - HERMES_GID=${HERMES_GID:-1000}
+    command: ["dashboard", "--host", "127.0.0.1", "--no-open"]
+
+  # 対話型CLIやセットアップ用のプロファイルサービス（docker compose run --rm cli などで使用）
+  cli:
+    image: hermes-agent:local
+    working_dir: /workspace
+    network_mode: host
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./data:/opt/data
+      - ./workspace:/workspace
+    environment:
+      - HERMES_UID=${HERMES_UID:-1000}
+      - HERMES_GID=${HERMES_GID:-1000}
+    command: ["hermes"]
