@@ -1,0 +1,9 @@
+# Hermes Agent 設定ファイル例 (config.yaml)
+# data/config.yaml にコピーして利用できます。
+
+web:
+  # 検索エンジンバックエンド（キーワード検索に SearXNG を使用）
+  search_backend: "searxng"
+  
+  # 抽出バックエンド（URL からの本文抽出・Markdown 変換に Firecrawl を使用）
+  extract_backend: "firecrawl"

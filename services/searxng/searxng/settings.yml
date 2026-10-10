@@ -1,0 +1,10 @@
+use_default_settings: true
+server:
+  # Random secret key for session encryption. Change this or pass via SEARXNG_SECRET.
+  secret_key: "ultrasecretkey_please_change_in_production"
+  bind_address: "0.0.0.0"
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json
