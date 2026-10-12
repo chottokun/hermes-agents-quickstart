@@ -23,11 +23,13 @@ if [ ! -f .env ]; then
         touch .env
     fi
     # ローカル用設定を追加
-    echo "" >> .env
-    echo "# Hermes Agent Local Integration Settings" >> .env
-    echo "USE_DB_AUTHENTICATION=false" >> .env
-    echo "TEST_API_KEY=fc-local-key" >> .env
-    echo "PORT=3002" >> .env
+    cat << 'ENV_EOF' >> .env
+
+# Hermes Agent Local Integration Settings
+USE_DB_AUTHENTICATION=false
+TEST_API_KEY=fc-local-key
+PORT=3002
+ENV_EOF
 fi
 
 echo "Setup complete. You can start Firecrawl with: ./services/firecrawl/run.sh up"
