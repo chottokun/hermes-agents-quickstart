@@ -1,145 +1,153 @@
 # mi-harmes
 
-Hermes Agent を Docker Compose で実行・管理するための設定リポジトリです。
+[日本語ドキュメント (Japanese)](README.ja.md)
 
-設定、スキル、作業成果物をホスト側のディレクトリに保存し、認証情報やログを除外して Git で管理できるように構成しています。
+Docker Compose configuration for running and managing [Hermes Agent](https://github.com/NousResearch/hermes-agent) in a local environment.
 
-## ディレクトリ構成
+> [!NOTE]
+> **Personal / Experimental Repository**
+> This repository is a personal setup created for testing and experimenting with Hermes Agent and local self-hosted tools. It is not an official project and is provided as-is without warranties or official support.
+
+## Overview
+
+This repository structures configuration files, custom skills, and workspace directories on the host machine while keeping credentials, session histories, and runtime databases out of Git tracking.
+
+## Directory Structure
 
 ```text
 mi-harmes/
-├── hermes-agent/       # Hermes Agent リポジトリ（Git サブモジュール）
-├── docker-compose.yml  # コンテナ定義
-├── .env.example        # 環境変数テンプレート（UID/GID）
-├── .gitignore          # Git 除外設定
-├── data/               # Hermes データディレクトリ（コンテナ側 /opt/data）
-│   ├── skills/         # スキル（Git 管理対象）
-│   ├── memories/       # 記憶データ（Git 除外）
-│   ├── sessions/       # セッション履歴（Git 除外）
-│   ├── state.db        # 内部データベース（Git 除外）
-│   └── .env            # APIキー・認証情報（Git 除外）
-└── workspace/          # 作業ディレクトリ（コンテナ側 /workspace）
-                        # 実行時に生成されるコードやダウンロードファイル
+├── hermes-agent/       # Hermes Agent repository (Git submodule)
+├── docker-compose.yml  # Container definitions
+├── .env.example        # Environment variable template (UID/GID)
+├── .gitignore          # Git ignore rules
+├── manage.sh           # Service management script
+├── config.yaml.example # Configuration template for Hermes Agent
+├── data/               # Hermes data directory (/opt/data in container)
+│   ├── skills/         # Custom and bundled skills (tracked in Git)
+│   ├── memories/       # Agent memory data (ignored)
+│   ├── sessions/       # Chat session history (ignored)
+│   ├── state.db        # Internal SQLite database (ignored)
+│   └── .env            # API keys and provider credentials (ignored)
+├── services/           # Self-hosted search and extraction services
+│   ├── searxng/        # SearXNG configuration
+│   └── firecrawl/      # Firecrawl configuration
+└── workspace/          # Working directory (/workspace in container)
 ```
 
-## セットアップ
+## Setup
 
-### 1. サブモジュールの取得
-リポジトリをクローンした環境でサブモジュールを初期化します。
+### 1. Initialize Submodule
+Clone the repository and initialize the submodule:
 
 ```bash
 git submodule update --init --recursive
 ```
 
-### 2. 環境変数の設定
-ホストユーザーの UID/GID を設定します（通常は 1000）。
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and adjust UID/GID if necessary (default is 1000):
 
 ```bash
 cp .env.example .env
 ```
 
-### 3. イメージのビルド
+### 3. Build Container Image
 ```bash
 docker compose build
 ```
 
-### 4. 初回セットアップ
-API キーやプロバイダーの設定を行います（設定は `data/.env` に保存されます）。
+### 4. Initial Configuration
+Configure API keys and model providers (stored in `data/.env`):
 
 ```bash
 docker compose run --rm cli setup
 ```
 
-## 起動方法
+## Usage
 
-### CLI（対話型チャット）
+### CLI (Interactive Chat)
 ```bash
 docker compose run --rm cli
 ```
 
-### Gateway / ダッシュボード（バックグラウンド起動）
+### Gateway / Web Dashboard (Background)
 ```bash
 docker compose up -d
 ```
 
-- ダッシュボード: `http://127.0.0.1:9119`
-- ログ確認: `docker compose logs -f`
-- 停止: `docker compose down`
+- Web Dashboard: `http://127.0.0.1:9119`
+- View logs: `docker compose logs -f`
+- Stop containers: `docker compose down`
 
-## セルフホスト検索・抽出エンジン (SearXNG / Firecrawl)
+## Self-Hosted Search & Extraction Engines
 
-外部 API 費用をかけずに Web 検索・ページ抽出を行うためのセルフホストサービスです。
+Local services for search and web scraping without external search API costs:
 
-| サービス | 役割 | ポート | 起動方法 |
+| Service | Function | Port | Start Command |
 | :--- | :--- | :--- | :--- |
-| **SearXNG** | キーワード検索 (`web_search`) | `8888` | `./manage.sh searxng up` |
-| **Firecrawl** | Web ページ抽出・Markdown 変換 (`web_extract`) | `3002` | `./manage.sh firecrawl up` |
+| **SearXNG** | Keyword search (`web_search`) | `8888` | `./manage.sh searxng up` |
+| **Firecrawl** | Web page extraction / Markdown conversion (`web_extract`) | `3002` | `./manage.sh firecrawl up` |
 
-### Hermes Agent への設定反映
-1. **環境変数の設定** (`data/.env` または `.env`):
+### Hermes Agent Integration
+1. **Environment Variables** (`data/.env` or `.env`):
    ```bash
    SEARXNG_URL=http://localhost:8888
    FIRECRAWL_API_URL=http://localhost:3002
    FIRECRAWL_API_KEY=fc-local-key
    ```
-2. **バックエンドの指定** (`data/config.yaml`):
-   `config.yaml.example` を参考に以下を設定します。
+
+2. **Backend Configuration** (`data/config.yaml`):
+   Set the following based on `config.yaml.example`:
    ```yaml
    web:
      search_backend: "searxng"
      extract_backend: "firecrawl"
    ```
 
-## 統合管理スクリプト (`./manage.sh`)
+## Management Script (`./manage.sh`)
 
-全サービスの起動・停止・確認をワンコマンドで行えます。
+Convenience commands for managing all services:
 
 ```bash
-# 稼働状況の確認
+# Check status
 ./manage.sh status
 
-# SearXNG の起動・停止
+# SearXNG
 ./manage.sh searxng up
 ./manage.sh searxng down
 
-# Firecrawl の起動・停止（初回は自動セットアップ）
+# Firecrawl (auto-setup on first run)
 ./manage.sh firecrawl up
 ./manage.sh firecrawl down
 
-# 全サービス（SearXNG + Firecrawl + Hermes）の一括起動・停止
+# All services (SearXNG + Firecrawl + Hermes)
 ./manage.sh all up
 ./manage.sh all down
 ```
 
-## リモートアクセス（トンネル経由）
+## Remote Access (SSH Tunnel)
 
-ダッシュボード（ポート 9119）はローカルホスト（127.0.0.1）にバインドされているため、他のマシンからアクセスする場合は SSH トンネル（暗号化トンネル）を利用します。
-
-接続元（クライアント PC 等）の端末で以下を実行します：
+The Web Dashboard binds to `127.0.0.1:9119` by default. To access it from a remote machine, use an SSH tunnel:
 
 ```bash
-# ダッシュボード（9119）をローカルに転送
-ssh -N -L 9119:localhost:9119 <ユーザー名>@<サーバーIPまたはホスト名>
+# Forward dashboard port (9119)
+ssh -N -L 9119:localhost:9119 <user>@<host>
+
+# Forward both dashboard (9119) and API server (8642)
+ssh -N -L 9119:localhost:9119 -L 8642:localhost:8642 <user>@<host>
 ```
 
-※ API サーバー（8642）も同時に転送する場合：
-```bash
-ssh -N -L 9119:localhost:9119 -L 8642:localhost:8642 <ユーザー名>@<サーバーIPまたはホスト名>
-```
+After connecting, open `http://localhost:9119` in your local browser.
 
-トンネル接続後、クライアント側のブラウザで `http://localhost:9119` を開いてアクセスします。
+## Git Tracking Policy
 
-## Git 管理方針
+- **Tracked**:
+  - `docker-compose.yml`, `.env.example`, `config.yaml.example`, `.gitignore`, `README.md`, `README.ja.md`, `manage.sh`
+  - `data/skills/` (shared skills)
+- **Ignored**:
+  - `.env`, `data/.env` (API keys, credentials)
+  - `data/sessions/`, `data/memories/`, `data/state.db*` (runtime database and session history)
+  - `workspace/*` (agent-generated files and downloads)
 
-- **管理対象**:
-  - `docker-compose.yml`, `.env.example`, `.gitignore`, `README.md`
-  - `data/skills/`（保存されたスキル定義）
-- **除外対象（.gitignore）**:
-  - `data/.env`（APIキー等）
-  - `data/sessions/`, `data/memories/`, `data/state.db*`（セッション・記憶・DB）
-  - `workspace/*`（作業ファイル・ダウンロードファイル）
-
-## ライセンス
+## License
 
 [MIT License](LICENSE)
-
