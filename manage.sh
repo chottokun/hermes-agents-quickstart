@@ -5,7 +5,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 show_help() {
     cat << EOF
-mi-harmes 統合管理スクリプト
+hermes-agents-quickstart 統合管理スクリプト
 
 使用方法:
   ./manage.sh [サービス] [コマンド]

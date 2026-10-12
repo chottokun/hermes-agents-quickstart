@@ -1,4 +1,4 @@
-# mi-harmes
+# hermes-agents-quickstart
 
 [日本語ドキュメント (Japanese)](README.ja.md)
 
@@ -20,7 +20,7 @@ This repository structures configuration files, services, and workspace director
 ## Directory Structure
 
 ```text
-mi-harmes/
+hermes-agents-quickstart/
 ├── hermes-agent/       # Hermes Agent repository (Git submodule)
 ├── docker-compose.yml  # Container definitions
 ├── .env.example        # Environment variable template (UID/GID)

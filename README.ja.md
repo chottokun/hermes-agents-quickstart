@@ -1,4 +1,4 @@
-# mi-harmes
+# hermes-agents-quickstart
 
 [English Document](README.md)
 
@@ -20,7 +20,7 @@
 ## ディレクトリ構成
 
 ```text
-mi-harmes/
+hermes-agents-quickstart/
 ├── hermes-agent/       # Hermes Agent リポジトリ（Git サブモジュール）
 ├── docker-compose.yml  # コンテナ定義
 ├── .env.example        # 環境変数テンプレート（UID/GID）
