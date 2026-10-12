@@ -5,12 +5,17 @@
 Docker Compose configuration for running and managing [Hermes Agent](https://github.com/NousResearch/hermes-agent) in a local environment.
 
 > [!NOTE]
-> **Personal / Experimental Repository**
-> This repository is a personal setup created for testing and experimenting with Hermes Agent and local self-hosted tools. It is not an official project and is provided as-is without warranties or official support.
+> **Personal Notes & Experimental Sandbox**
+> This repository is a personal notebook and scratchpad for testing Hermes Agent and self-hosted tools (SearXNG / Firecrawl) in a local Docker environment.
+> Provided as-is for personal reference and reproducibility; issues and pull requests may not be monitored.
+
+> [!TIP]
+> **Clean Slate Setup**
+> This repository contains only configuration files and orchestration scripts. It does not include any agent runtime artifacts (custom skills, memories, chat sessions, or databases). You can start completely from scratch.
 
 ## Overview
 
-This repository structures configuration files, custom skills, and workspace directories on the host machine while keeping credentials, session histories, and runtime databases out of Git tracking.
+This repository structures configuration files, services, and workspace directories on the host machine while keeping all credentials, runtime databases, and agent-generated data out of Git tracking.
 
 ## Directory Structure
 
@@ -23,11 +28,8 @@ mi-harmes/
 ├── manage.sh           # Service management script
 ├── config.yaml.example # Configuration template for Hermes Agent
 ├── data/               # Hermes data directory (/opt/data in container)
-│   ├── skills/         # Custom and bundled skills (tracked in Git)
-│   ├── memories/       # Agent memory data (ignored)
-│   ├── sessions/       # Chat session history (ignored)
-│   ├── state.db        # Internal SQLite database (ignored)
-│   └── .env            # API keys and provider credentials (ignored)
+│   ├── .gitkeep        # Directory placeholder (runtime data is ignored)
+│   └── (skills, memories, sessions, state.db are generated at runtime)
 ├── services/           # Self-hosted search and extraction services
 │   ├── searxng/        # SearXNG configuration
 │   └── firecrawl/      # Firecrawl configuration
@@ -105,7 +107,7 @@ Local services for search and web scraping without external search API costs:
 
 ## Management Script (`./manage.sh`)
 
-Convenience commands for managing all services:
+Utility commands for managing all services:
 
 ```bash
 # Check status
@@ -142,10 +144,10 @@ After connecting, open `http://localhost:9119` in your local browser.
 
 - **Tracked**:
   - `docker-compose.yml`, `.env.example`, `config.yaml.example`, `.gitignore`, `README.md`, `README.ja.md`, `manage.sh`
-  - `data/skills/` (shared skills)
+  - Directory placeholders (`data/.gitkeep`, `workspace/.gitkeep`)
 - **Ignored**:
   - `.env`, `data/.env` (API keys, credentials)
-  - `data/sessions/`, `data/memories/`, `data/state.db*` (runtime database and session history)
+  - `data/*` (skills, sessions, memories, runtime database)
   - `workspace/*` (agent-generated files and downloads)
 
 ## License

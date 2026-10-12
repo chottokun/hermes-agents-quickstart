@@ -5,12 +5,17 @@
 ローカル環境で [Hermes Agent](https://github.com/NousResearch/hermes-agent) を Docker Compose を用いて実行・管理するための設定リポジトリです。
 
 > [!NOTE]
-> **個人利用・実験用リポジトリ**
-> 本リポジトリは、Hermes Agent および関連ツール（SearXNG / Firecrawl）の動作検証を目的とした個人の実験用環境です。公式プロジェクトではなく、動作保証やサポートは提供されません（現状有姿 / AS-IS）。
+> **個人の検証メモ・実験用リポジトリ**
+> 本リポジトリは、Hermes Agent および関連ツール（SearXNG / Firecrawl）をローカル環境で動作検証するための個人用ノート・動作記録です。
+> 個人の備忘録・再現用設定であり、IssueやPRへの対応は保証しておりません（現状有姿 / AS-IS）。
+
+> [!TIP]
+> **クリーンスタート構成**
+> 本リポジトリには設定テンプレートとオーケストレーション用のスクリプトのみを含めています。エージェントが生成した成果物（カスタムスキル、記憶、会話セッション、データベース等）は一切含んでいないため、ゼロからクリーンにセットアップできます。
 
 ## 概要
 
-設定ファイル、スキル、作業ディレクトリをホスト側に配置しつつ、認証情報（APIキー）、セッション履歴、データベースなどを Git 管理対象から除外できるように構成しています。
+設定ファイル、サービス連携スクリプト、作業ディレクトリをホスト側に配置しつつ、認証情報（APIキー）、セッション履歴、データベースなどの成果物全般を Git 管理対象から除外できるように構成しています。
 
 ## ディレクトリ構成
 
@@ -23,11 +28,8 @@ mi-harmes/
 ├── manage.sh           # サービス管理スクリプト
 ├── config.yaml.example # Hermes Agent 設定テンプレート
 ├── data/               # Hermes データディレクトリ（コンテナ側 /opt/data）
-│   ├── skills/         # スキル定義（Git 管理対象）
-│   ├── memories/       # 記憶データ（Git 除外）
-│   ├── sessions/       # セッション履歴（Git 除外）
-│   ├── state.db        # 内部データベース（Git 除外）
-│   └── .env            # APIキー・認証情報（Git 除外）
+│   ├── .gitkeep        # ディレクトリ保持用（実行時データはGit除外）
+│   └── (スキル、記憶、セッション、state.db は起動時にゼロから生成されます)
 ├── services/           # セルフホスト検索・抽出サービス
 │   ├── searxng/        # SearXNG 設定
 │   └── firecrawl/      # Firecrawl 設定
@@ -141,10 +143,10 @@ ssh -N -L 9119:localhost:9119 -L 8642:localhost:8642 <ユーザー名>@<サー�
 
 - **管理対象**:
   - `docker-compose.yml`, `.env.example`, `config.yaml.example`, `.gitignore`, `README.md`, `README.ja.md`, `manage.sh`
-  - `data/skills/`（共有スキル定義）
+  - ディレクトリ保持プレースホルダー (`data/.gitkeep`, `workspace/.gitkeep`)
 - **除外対象**:
   - `.env`, `data/.env`（APIキー等）
-  - `data/sessions/`, `data/memories/`, `data/state.db*`（内部データベース・セッション履歴）
+  - `data/*`（スキル、セッション、記憶、内部データベース等）
   - `workspace/*`（作業ファイル・ダウンロード物）
 
 ## ライセンス
