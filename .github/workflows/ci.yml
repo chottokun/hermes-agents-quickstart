@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Configs & Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configs
+        run: |
+          docker compose config -q
+          docker compose -f services/searxng/docker-compose.yml config -q
+
+      - name: Check Shell Scripts Syntax
+        run: |
+          bash -n manage.sh services/firecrawl/setup.sh services/firecrawl/run.sh
+
+      - name: Run ShellCheck
+        run: |
+          shellcheck manage.sh services/firecrawl/setup.sh services/firecrawl/run.sh
+
+      - name: Validate YAML Syntax
+        run: |
+          python3 -c "
+          import yaml
+          files = ['config.yaml.example', 'services/searxng/searxng/settings.yml', '.github/workflows/ci.yml']
+          for f in files:
+              with open(f, 'r') as fp:
+                  yaml.safe_load(fp)
+          print('All YAML files are valid.')
+          "
+
+  secret-scan:
+    name: Secret Leak Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
