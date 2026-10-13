@@ -1,154 +1,157 @@
 # hermes-agents-quickstart
 
-[日本語ドキュメント (Japanese)](README.ja.md)
+[Japanese Document](README.ja.md)
 
-Docker Compose configuration for running and managing [Hermes Agent](https://github.com/NousResearch/hermes-agent) in a local environment.
+A configuration repository for safely, cleanly, and easily running [Hermes Agent](https://github.com/NousResearch/hermes-agent) locally via Docker Compose.
 
 > [!NOTE]
-> **Personal Notes & Experimental Sandbox**
-> This repository is a personal notebook and scratchpad for testing Hermes Agent and self-hosted tools (SearXNG / Firecrawl) in a local Docker environment.
-> Provided as-is for personal reference and reproducibility; issues and pull requests may not be monitored.
+> **Personal Research & Experimentation Repository**
+> This repository is a personal note and configuration record for experimenting with Hermes Agent and local companion services (SearXNG / Firecrawl).
+> Provided as-is without SLA for issues or PRs.
 
 > [!TIP]
-> **Clean Slate Setup**
-> This repository contains only configuration files and orchestration scripts. It does not include any agent runtime artifacts (custom skills, memories, chat sessions, or databases). You can start completely from scratch.
+> **Official Prebuilt Image & Clean-Start Setup**
+> Uses the official Docker image (`nousresearch/hermes-agent:latest`) by default. **No source cloning or local build required** — get started in seconds.
+> A dedicated build pathway (`./manage.sh build`) is also provided for local customization.
 
-## Overview
+---
 
-This repository structures configuration files, services, and workspace directories on the host machine while keeping all credentials, runtime databases, and agent-generated data out of Git tracking.
+## Key Features & Security Design
+
+1. **Non-Invasive to Host OS (No iptables required by default)**
+   - Operates cleanly without modifying host OS network configs or routing.
+2. **Minimal Port Exposure (WebUI Loopback Only)**
+   - Only the WebUI (`127.0.0.1:9119:9119`) is bound to host localhost. No exposure to local LAN.
+   - SearXNG (8080), Firecrawl (3002), and Gateway API (8642) are confined to internal bridge container networking (`expose`).
+3. **Container Privilege Drop (Principle of Least Privilege)**
+   - `security_opt: [no-new-privileges:true]` and dropped capabilities (`NET_RAW`, `NET_ADMIN`, etc.) prevent privilege escalation.
+4. **Hermes Agent Built-in SSRF Protection**
+   - Built-in validation blocks access to private network CIDRs (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) for web search and scraping tools.
+5. **Flexible Compose Profiles**
+   - Easily launch Minimal WebUI, Recommended WebUI + SearXNG, CLI TUI, or Full Stack.
+6. **Optional Host iptables LAN Isolation**
+   - Opt-in command `./manage.sh firewall on` available if L3/L4 packet dropping is desired.
+
+---
 
 ## Directory Structure
 
 ```text
 hermes-agents-quickstart/
-├── hermes-agent/       # Hermes Agent repository (Git submodule)
-├── docker-compose.yml  # Container definitions
-├── .env.example        # Environment variable template (UID/GID)
-├── .gitignore          # Git ignore rules
-├── manage.sh           # Service management script
-├── config.yaml.example # Configuration template for Hermes Agent
-├── data/               # Hermes data directory (/opt/data in container)
-│   ├── .gitkeep        # Directory placeholder (runtime data is ignored)
-│   └── (skills, memories, sessions, state.db are generated at runtime)
-├── services/           # Self-hosted search and extraction services
-│   ├── searxng/        # SearXNG configuration
-│   └── firecrawl/      # Firecrawl configuration
-└── workspace/          # Working directory (/workspace in container)
+├── docker-compose.yml       # Primary Compose file (uses official prebuilt image)
+├── docker-compose.build.yml # (Dev) Local build overlay
+├── .env.example             # Environment variable template
+├── .gitignore               # Git exclusion rules
+├── manage.sh                # Unified management script (Profiles / build / firewall)
+├── config.yaml.example      # Configuration template for Hermes Agent
+├── data/                    # Persistent data mount (/opt/data)
+├── services/                # Self-hosted search & extract services
+│   ├── searxng/             # SearXNG configuration
+│   └── firecrawl/           # Firecrawl configuration
+└── workspace/               # Host workspace mount (/workspace)
 ```
 
-## Setup
+---
 
-### 1. Initialize Submodule
-Clone the repository and initialize the submodule:
+## Quick Setup (3 Steps)
 
+### 1. Clone Repository
+No submodules required:
 ```bash
-git submodule update --init --recursive
+git clone https://github.com/chottokun/hermes-agents-quickstart.git
+cd hermes-agents-quickstart
 ```
 
-### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and adjust UID/GID if necessary (default is 1000):
-
+### 2. Configure Environment
 ```bash
 cp .env.example .env
 ```
+*(Optionally set `HERMES_DASHBOARD_BASIC_AUTH_USERNAME` and `HERMES_DASHBOARD_BASIC_AUTH_PASSWORD`)*
 
-### 3. Build Container Image
+### 3. Initial Setup (TUI)
+The official image is automatically downloaded:
 ```bash
-docker compose build
+./manage.sh setup
 ```
 
-### 4. Initial Configuration
-Configure API keys and model providers (stored in `data/.env`):
+---
 
+## Launch Options
+
+### Option A: WebUI + SearXNG ([Recommended] Balanced & Lightweight)
 ```bash
-docker compose run --rm cli setup
+./manage.sh search up
+# Or: docker compose --profile search up -d
 ```
 
-## Usage
-
-### CLI (Interactive Chat)
+### Option B: WebUI Only (Minimal Footprint)
 ```bash
-docker compose run --rm cli
+./manage.sh gateway up
+# Or: docker compose up -d gateway
 ```
 
-### Gateway / Web Dashboard (Background)
+### Option C: Interactive CLI (TUI Only)
 ```bash
-docker compose up -d
+./manage.sh cli
+# Or: docker compose run --rm cli
 ```
 
-- Web Dashboard: `http://127.0.0.1:9119`
-- View logs: `docker compose logs -f`
-- Stop containers: `docker compose down`
+### Option D: Full Stack (With Local Web Extraction)
+```bash
+./manage.sh full up
+```
 
-## Self-Hosted Search & Extraction Engines
+---
 
-Local services for search and web scraping without external search API costs:
+## Developer Guide: Local Source Build
 
-| Service | Function | Port | Start Command |
-| :--- | :--- | :--- | :--- |
-| **SearXNG** | Keyword search (`web_search`) | `8888` | `./manage.sh searxng up` |
-| **Firecrawl** | Web page extraction / Markdown conversion (`web_extract`) | `3002` | `./manage.sh firecrawl up` |
+To customize or build from source:
+```bash
+./manage.sh build
+```
+* Automatically fetches the `hermes-agent` submodule if missing.
+* Builds `hermes-agent:local` via `docker-compose.build.yml`.
+* Configures `.env` with `HERMES_IMAGE=hermes-agent:local` seamlessly.
 
-### Hermes Agent Integration
-1. **Environment Variables** (`data/.env` or `.env`):
-   ```bash
-   SEARXNG_URL=http://localhost:8888
-   FIRECRAWL_API_URL=http://localhost:3002
-   FIRECRAWL_API_KEY=fc-local-key
-   ```
+---
 
-2. **Backend Configuration** (`data/config.yaml`):
-   Set the following based on `config.yaml.example`:
-   ```yaml
-   web:
-     search_backend: "searxng"
-     extract_backend: "firecrawl"
-   ```
-
-## Management Script (`./manage.sh`)
-
-Utility commands for managing all services:
+## Stop, Status & Update
 
 ```bash
-# Check status
+# Check status of running containers
 ./manage.sh status
 
-# SearXNG
-./manage.sh searxng up
-./manage.sh searxng down
+# Stop all running services
+./manage.sh down
 
-# Firecrawl (auto-setup on first run)
-./manage.sh firecrawl up
-./manage.sh firecrawl down
-
-# All services (SearXNG + Firecrawl + Hermes)
-./manage.sh all up
-./manage.sh all down
+# Update official image to latest
+./manage.sh update
 ```
 
-## Remote Access (SSH Tunnel)
+---
 
-The Web Dashboard binds to `127.0.0.1:9119` by default. To access it from a remote machine, use an SSH tunnel:
+## Remote Access (SSH Tunneling)
+
+The Web Dashboard is bound to `127.0.0.1:9119` and not exposed to the LAN. Access securely from remote machines via an SSH tunnel:
 
 ```bash
-# Forward dashboard port (9119)
-ssh -N -L 9119:localhost:9119 <user>@<host>
+ssh -N -L 9119:localhost:9119 <user>@<server-host>
+```
+Then navigate to `http://localhost:9119` in your browser.
 
-# Forward both dashboard (9119) and API server (8642)
-ssh -N -L 9119:localhost:9119 -L 8642:localhost:8642 <user>@<host>
+---
+
+## Optional: Host iptables LAN Isolation
+
+To enforce L3/L4 packet dropping towards private subnets:
+
+```bash
+./manage.sh firewall on
+./manage.sh firewall status
+./manage.sh firewall off
 ```
 
-After connecting, open `http://localhost:9119` in your local browser.
-
-## Git Tracking Policy
-
-- **Tracked**:
-  - `docker-compose.yml`, `.env.example`, `config.yaml.example`, `.gitignore`, `README.md`, `README.ja.md`, `manage.sh`
-  - Directory placeholders (`data/.gitkeep`, `workspace/.gitkeep`)
-- **Ignored**:
-  - `.env`, `data/.env` (API keys, credentials)
-  - `data/*` (skills, sessions, memories, runtime database)
-  - `workspace/*` (agent-generated files and downloads)
+---
 
 ## License
 

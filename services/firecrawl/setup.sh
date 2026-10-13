@@ -32,4 +32,23 @@ PORT=3002
 ENV_EOF
 fi
 
+# ホストポート露出を遮断し、Hermes内部ネットワーク（agent_internal）へ連携するoverrideを作成
+cat << 'OVERRIDE_EOF' > docker-compose.override.yaml
+networks:
+  agent_internal:
+    external: true
+    name: mi_hermes_internal
+
+services:
+  api:
+    networks:
+      backend: {}
+      agent_internal:
+        aliases:
+          - firecrawl
+    ports: !reset []
+    expose:
+      - "3002"
+OVERRIDE_EOF
+
 echo "Setup complete. You can start Firecrawl with: ./services/firecrawl/run.sh up"

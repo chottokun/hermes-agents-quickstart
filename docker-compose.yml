@@ -1,29 +1,63 @@
+networks:
+  agent_internal:
+    driver: bridge
+    name: mi_hermes_internal
+
 services:
+  # ----------------------------------------------------
+  # 1. Web Dashboard & Gateway (WebUIのみホストループバックへ公開)
+  # ----------------------------------------------------
   gateway:
-    build:
-      context: ./hermes-agent
-      dockerfile: Dockerfile
-    image: hermes-agent:local
+    image: ${HERMES_IMAGE:-nousresearch/hermes-agent:latest}
     container_name: hermes
     restart: unless-stopped
-    network_mode: host
     working_dir: /workspace
     volumes:
       - ./data:/opt/data
       - ./workspace:/workspace
+    networks:
+      - agent_internal
+    ports:
+      # 外部公開は WebUI (9119) のみ。127.0.0.1縛りでLAN露出を完全遮断
+      - "127.0.0.1:9119:9119"
+    expose:
+      # 内部API (8642) はコンテナ間通信のみに制限
+      - "8642"
     environment:
       - HERMES_UID=${HERMES_UID:-1000}
       - HERMES_GID=${HERMES_GID:-1000}
       - HERMES_DASHBOARD=1
-      - HERMES_DASHBOARD_HOST=127.0.0.1
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+      - HERMES_DASHBOARD_PORT=9119
+      - HERMES_DASHBOARD_BASIC_AUTH_USERNAME=${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:-}
+      - HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:-}
+    # s6-overlay のユーザーリマップ・降格に必要な最小特権のみ許可し、ネットワーク特権等は完全ドロップ
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     command: ["gateway", "run"]
 
-  # 対話型CLIやセットアップ用のサービス（docker compose run --rm cli などの手動時のみ起動）
+  # ----------------------------------------------------
+  # 2. CLI / TUI（初期セットアップおよび対話用）
+  # ----------------------------------------------------
   cli:
     profiles: ["cli"]
-    image: hermes-agent:local
+    image: ${HERMES_IMAGE:-nousresearch/hermes-agent:latest}
     working_dir: /workspace
-    network_mode: host
+    networks:
+      - agent_internal
+    init: true
     stdin_open: true
     tty: true
     volumes:
@@ -32,4 +66,40 @@ services:
     environment:
       - HERMES_UID=${HERMES_UID:-1000}
       - HERMES_GID=${HERMES_GID:-1000}
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
     command: ["hermes"]
+
+  # ----------------------------------------------------
+  # 3. 軽量メタ検索エンジン（SearXNG: 内部ネットワーク専用）
+  # ----------------------------------------------------
+  searxng:
+    profiles: ["search", "full"]
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    volumes:
+      - ./services/searxng/searxng:/etc/searxng:ro
+    networks:
+      - agent_internal
+    expose:
+      - "8080"
+    environment:
+      - SEARXNG_BASE_URL=http://searxng:8080/
+      - FORCE_OWNERSHIP=false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M

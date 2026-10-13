@@ -1,0 +1,15 @@
+# hermes-agent ローカルビルド用オーバーレイ
+# 使用方法: ./manage.sh build (または docker compose -f docker-compose.yml -f docker-compose.build.yml build)
+
+services:
+  gateway:
+    build:
+      context: ./hermes-agent
+      dockerfile: Dockerfile
+    image: hermes-agent:local
+
+  cli:
+    build:
+      context: ./hermes-agent
+      dockerfile: Dockerfile
+    image: hermes-agent:local

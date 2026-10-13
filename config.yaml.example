@@ -6,4 +6,5 @@ web:
   search_backend: "searxng"
   
   # 抽出バックエンド（URL からの本文抽出・Markdown 変換に Firecrawl を使用）
-  extract_backend: "firecrawl"
+  # SearXNG のみ運用（search プロファイル）の場合は "none" を指定してください。
+  extract_backend: "none" # フル構成（full プロファイル）運用の場合は "firecrawl"
