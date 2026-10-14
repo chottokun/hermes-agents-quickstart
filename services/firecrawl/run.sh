@@ -19,7 +19,7 @@ case "$ACTION" in
         if ! docker network inspect mi_hermes_internal >/dev/null 2>&1; then
             echo "内部ネットワーク mi_hermes_internal を作成しています..."
             if [ -f "$DIR/../../docker-compose.yml" ]; then
-                (cd "$DIR/../.." && docker compose --profile "" create --no-build gateway >/dev/null 2>&1 || true)
+                docker compose --project-directory "$DIR/../.." -f "$DIR/../../docker-compose.yml" --profile "" create --no-build gateway >/dev/null 2>&1 || true
             fi
             if ! docker network inspect mi_hermes_internal >/dev/null 2>&1; then
                 docker network create --label com.docker.compose.network=agent_internal mi_hermes_internal
