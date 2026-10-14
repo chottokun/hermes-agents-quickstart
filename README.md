@@ -29,8 +29,8 @@ A configuration repository for safely, cleanly, and easily running [Hermes Agent
    - Built-in validation blocks access to private network CIDRs (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) for web search and scraping tools.
 5. **Flexible Compose Profiles**
    - Easily launch Minimal WebUI, Recommended WebUI + SearXNG, CLI TUI, or Full Stack.
-6. **Optional Host iptables LAN Isolation**
-   - Opt-in command `./manage.sh firewall on` available if L3/L4 packet dropping is desired.
+6. **Resource Limits & Log Rotation (VPS Stability)**
+   - All services define explicit memory limits (preventing host OOM lockups) and log rotation (`max-size: 10m`, `max-file: 3`) to eliminate disk exhaustion risk.
 
 ---
 
