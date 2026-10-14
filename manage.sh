@@ -63,7 +63,7 @@ handle_build() {
     echo "ローカルビルドイメージを使用するには、.env に以下を設定してください:"
     echo "  HERMES_IMAGE=hermes-agent:local"
     echo ""
-    read -p ".env の HERMES_IMAGE を hermes-agent:local に設定しますか？ [Y/n]: " ans || ans="y"
+    read -r -p ".env の HERMES_IMAGE を hermes-agent:local に設定しますか？ [Y/n]: " ans || ans="y"
     case "$ans" in
         [nN]*)
             echo "設定をスキップしました。"
