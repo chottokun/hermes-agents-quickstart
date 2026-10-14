@@ -78,6 +78,10 @@ The official image is automatically downloaded:
 
 ## Launch Options
 
+> [!TIP]
+> **One-Command Startup & Resume (`./manage.sh run`)**
+> Running `./manage.sh run` (or `./manage.sh up`) automatically **remembers and resumes your previously used profile configuration** (defaults to recommended `search up` on initial run). Day-to-day operation can be done with this single command.
+
 ### Option A: WebUI + SearXNG ([Recommended] Balanced & Lightweight)
 ```bash
 ./manage.sh search up

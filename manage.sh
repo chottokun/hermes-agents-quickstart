@@ -12,6 +12,9 @@ hermes-agents-quickstart 統合管理スクリプト
 使用方法:
   ./manage.sh [サービス/プロファイル] [コマンド]
 
+クイック起動・再開:
+  run (または up) 前回起動した構成で即座に再開 (初回は推奨構成 search up を起動)
+
 目的別起動 (Compose Profiles):
   search        【推奨・軽量】WebUI + SearXNG (Web検索対応)
   gateway       WebUI 最小構成 (メタ検索・Web抽出なし)
@@ -37,6 +40,7 @@ hermes-agents-quickstart 統合管理スクリプト
   status        コンテナの稼働状況を表示
 
 コマンド例:
+  ./manage.sh run              前回の起動構成を再開 (ワンコマンド起動)
   ./manage.sh search up        WebUI + SearXNG を起動 (推奨)
   ./manage.sh search down      WebUI + SearXNG を停止
   ./manage.sh gateway up       WebUI のみ起動
@@ -58,9 +62,33 @@ ensure_config() {
     fi
 }
 
+# 起動構成の永続化
+save_last_run() {
+    mkdir -p "$DIR/data"
+    echo "$*" > "$DIR/data/.last_run"
+}
+
+# 前回起動構成の再実行
+handle_run() {
+    local last_file="$DIR/data/.last_run"
+    if [ -f "$last_file" ]; then
+        local last_cmd
+        last_cmd=$(head -n 1 "$last_file" | tr -d '
+')
+        if [ -n "$last_cmd" ]; then
+            echo "前回の起動構成を再実行します: ./manage.sh $last_cmd"
+            # shellcheck disable=SC2086
+            exec "$DIR/manage.sh" $last_cmd
+        fi
+    fi
+    echo "初回起動のため、推奨構成 (WebUI + SearXNG) で起動します: ./manage.sh search up"
+    exec "$DIR/manage.sh" search up
+}
+
 # SearXNG 検索連動 CLI 起動
 run_cli_search() {
     ensure_config
+    save_last_run "cli" "search"
     echo "SearXNG を内部ネットワークで起動しています..."
     docker compose --profile search up -d searxng
     echo "Hermes CLI セッション (SearXNG Web検索連動) を開始します..."
@@ -105,12 +133,19 @@ ACTION="${2:-status}"
 
 case "$TARGET" in
     # --------------------------------------------------
+    # ワンコマンド起動・再開
+    # --------------------------------------------------
+    run|up)
+        handle_run
+        ;;
+    # --------------------------------------------------
     # 目的別起動オプション (Profiles)
     # --------------------------------------------------
     search)
         case "$ACTION" in
             up)
                 ensure_config
+                save_last_run "search" "up"
                 echo "WebUI + SearXNG (推奨軽量構成) を起動しています..."
                 docker compose --profile search up -d
                 echo "起動完了: WebUI (http://127.0.0.1:9119) / SearXNG (内部DNS: searxng:8080)"
@@ -139,6 +174,7 @@ case "$TARGET" in
         case "$ACTION" in
             up)
                 ensure_config
+                save_last_run "gateway" "up"
                 echo "Hermes Gateway (WebUI 最小構成) を起動しています..."
                 docker compose up -d gateway
                 echo "起動完了: WebUI (http://127.0.0.1:9119)"
@@ -211,6 +247,7 @@ case "$TARGET" in
         case "$ACTION" in
             up)
                 ensure_config
+                save_last_run "full" "up"
                 echo "=== 1. WebUI + SearXNG を起動 ==="
                 docker compose --profile search up -d
                 echo "=== 2. Firecrawl を起動 ==="
@@ -244,6 +281,7 @@ case "$TARGET" in
             run_cli_search
         else
             ensure_config
+            save_last_run "cli"
             docker compose run --rm cli
         fi
         ;;
