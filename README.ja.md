@@ -101,11 +101,15 @@ WebUIで対話・監視しつつ、SearXNGで安全にWeb検索を行える推�
 # または: docker compose up -d gateway
 ```
 
-### Option C: 対話型 CLI (TUI) 単体
-WebUIも常駐させず、ターミナルで対話したい時だけ一時起動します。
+### Option C: 対話型 CLI (TUI)
+WebUI を常駐させず、ターミナルで対話したい時だけ一時起動します。Web検索（SearXNG）連動にも対応しています。
 ```bash
+# CLI 単体セッション（軽量・検索なし）
 ./manage.sh cli
-# または: docker compose run --rm cli
+
+# CLI + SearXNG（Web検索連動）
+./manage.sh cli search
+# または: ./manage.sh search cli
 ```
 
 ### Option D: 全部入り（Firecrawlを含む完全構成）

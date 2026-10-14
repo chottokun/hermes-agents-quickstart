@@ -90,10 +90,15 @@ The official image is automatically downloaded:
 # Or: docker compose up -d gateway
 ```
 
-### Option C: Interactive CLI (TUI Only)
+### Option C: Interactive CLI (TUI)
+Run an on-demand terminal session without a persistent WebUI container. Supports integration with SearXNG web search.
 ```bash
+# Standalone CLI session (lightweight, no web search)
 ./manage.sh cli
-# Or: docker compose run --rm cli
+
+# CLI + SearXNG (with integrated web search)
+./manage.sh cli search
+# Or: ./manage.sh search cli
 ```
 
 ### Option D: Full Stack (With Local Web Extraction)

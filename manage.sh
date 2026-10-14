@@ -20,6 +20,7 @@ hermes-agents-quickstart 統合管理スクリプト
 
 対話・セットアップ:
   cli           対話型 CLI (TUI) セッションを起動
+  cli search    SearXNG (Web検索) と連動して CLI を起動 (または ./manage.sh search cli)
   setup         Hermes Agent の初期セットアップ (TUI)
 
 ビルド・更新:
@@ -42,6 +43,7 @@ hermes-agents-quickstart 統合管理スクリプト
   ./manage.sh full up          全機能 (Firecrawl含む) を起動
   ./manage.sh down             全サービスを一括停止
   ./manage.sh cli              ターミナルで対話型CLIを起動
+  ./manage.sh cli search       SearXNG (Web検索) 連動で対話型CLIを起動
   ./manage.sh build            ローカルでソースからビルド
   ./manage.sh update           公式イメージを最新に更新
 HELP_EOF
@@ -54,6 +56,18 @@ ensure_config() {
         cp "$DIR/config.yaml.example" "$DIR/data/config.yaml"
         echo "設定ファイルを自動配置しました: data/config.yaml"
     fi
+}
+
+# SearXNG 検索連動 CLI 起動
+run_cli_search() {
+    ensure_config
+    echo "SearXNG を内部ネットワークで起動しています..."
+    docker compose --profile search up -d searxng
+    echo "Hermes CLI セッション (SearXNG Web検索連動) を開始します..."
+    docker compose run --rm cli
+    echo ""
+    echo "CLI セッションを終了しました。"
+    echo "※ SearXNG はバックグラウンドで稼働中です。停止する場合は './manage.sh search down' を実行してください。"
 }
 
 # ローカルビルド処理
@@ -111,8 +125,11 @@ case "$TARGET" in
             status)
                 docker compose --profile search ps
                 ;;
+            cli)
+                run_cli_search
+                ;;
             *)
-                echo "不明なコマンドです: $ACTION (up, down, logs, status)"
+                echo "不明なコマンドです: $ACTION (up, down, logs, status, cli)"
                 exit 1
                 ;;
         esac
@@ -223,8 +240,16 @@ case "$TARGET" in
     # 対話 / セットアップ / ビルド / 更新
     # --------------------------------------------------
     cli)
-        ensure_config
-        docker compose run --rm cli
+        if [ "$ACTION" = "search" ]; then
+            run_cli_search
+        else
+            ensure_config
+            docker compose run --rm cli
+        fi
+        ;;
+
+    cli-search)
+        run_cli_search
         ;;
 
     setup)
