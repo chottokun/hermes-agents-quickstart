@@ -34,7 +34,6 @@ hermes-agents-quickstart 統合管理スクリプト
 システム全体操作:
   down          稼働中の全サービスを一括停止
   status        コンテナの稼働状況を表示
-  firewall      [on|off|status] オプトインのローカルLAN通信遮断ルール
 
 コマンド例:
   ./manage.sh search up        WebUI + SearXNG を起動 (推奨)
@@ -45,8 +44,16 @@ hermes-agents-quickstart 統合管理スクリプト
   ./manage.sh cli              ターミナルで対話型CLIを起動
   ./manage.sh build            ローカルでソースからビルド
   ./manage.sh update           公式イメージを最新に更新
-  ./manage.sh firewall on      (任意) ホストiptablesでLANへのパケットを遮断
 HELP_EOF
+}
+
+# 設定ファイル (data/config.yaml) の自動初期化
+ensure_config() {
+    if [ ! -f "$DIR/data/config.yaml" ] && [ -f "$DIR/config.yaml.example" ]; then
+        mkdir -p "$DIR/data"
+        cp "$DIR/config.yaml.example" "$DIR/data/config.yaml"
+        echo "設定ファイルを自動配置しました: data/config.yaml"
+    fi
 }
 
 # ローカルビルド処理
@@ -79,45 +86,6 @@ handle_build() {
     esac
 }
 
-# ファイアウォール (iptables) 制御
-handle_firewall() {
-    local action="${1:-status}"
-    local private_cidrs=("192.168.0.0/16" "10.0.0.0/8" "172.16.0.0/12")
-
-    case "$action" in
-        on)
-            echo "ホストOS iptables の DOCKER-USER チェーンにローカルLAN遮断ルールを適用します..."
-            for cidr in "${private_cidrs[@]}"; do
-                if sudo iptables -C DOCKER-USER -i br-+ -d "$cidr" -j DROP 2>/dev/null; then
-                    echo "  - 既に登録済み: $cidr"
-                else
-                    sudo iptables -I DOCKER-USER -i br-+ -d "$cidr" -j DROP
-                    echo "  - 遮断ルール追加: $cidr"
-                fi
-            done
-            echo "ローカルLANへのパケット遮断が有効になりました。"
-            ;;
-        off)
-            echo "ホストOS iptables からローカルLAN遮断ルールを解除します..."
-            for cidr in "${private_cidrs[@]}"; do
-                while sudo iptables -C DOCKER-USER -i br-+ -d "$cidr" -j DROP 2>/dev/null; do
-                    sudo iptables -D DOCKER-USER -i br-+ -d "$cidr" -j DROP
-                    echo "  - 遮断ルール削除: $cidr"
-                done
-            done
-            echo "ローカルLANへのパケット遮断が解除されました。"
-            ;;
-        status)
-            echo "=== iptables DOCKER-USER チェーンのLAN遮断ルール ==="
-            sudo iptables -L DOCKER-USER -v -n 2>/dev/null | grep -E "(192\.168\.|10\.|172\.16\.)" || echo "現在、ローカルLAN遮断ルールは適用されていません (無効)。"
-            ;;
-        *)
-            echo "使用方法: ./manage.sh firewall [on|off|status]"
-            exit 1
-            ;;
-    esac
-}
-
 TARGET="${1:-status}"
 ACTION="${2:-status}"
 
@@ -128,6 +96,7 @@ case "$TARGET" in
     search)
         case "$ACTION" in
             up)
+                ensure_config
                 echo "WebUI + SearXNG (推奨軽量構成) を起動しています..."
                 docker compose --profile search up -d
                 echo "起動完了: WebUI (http://127.0.0.1:9119) / SearXNG (内部DNS: searxng:8080)"
@@ -152,6 +121,7 @@ case "$TARGET" in
     gateway|hermes)
         case "$ACTION" in
             up)
+                ensure_config
                 echo "Hermes Gateway (WebUI 最小構成) を起動しています..."
                 docker compose up -d gateway
                 echo "起動完了: WebUI (http://127.0.0.1:9119)"
@@ -164,9 +134,11 @@ case "$TARGET" in
                 docker compose logs -f gateway
                 ;;
             cli)
+                ensure_config
                 docker compose run --rm cli
                 ;;
             setup)
+                ensure_config
                 docker compose run --rm cli setup
                 ;;
             status)
@@ -221,6 +193,7 @@ case "$TARGET" in
     full|all)
         case "$ACTION" in
             up)
+                ensure_config
                 echo "=== 1. WebUI + SearXNG を起動 ==="
                 docker compose --profile search up -d
                 echo "=== 2. Firecrawl を起動 ==="
@@ -249,14 +222,17 @@ case "$TARGET" in
     # 対話 / セットアップ / ビルド / 更新
     # --------------------------------------------------
     cli)
+        ensure_config
         docker compose run --rm cli
         ;;
 
     setup)
+        ensure_config
         docker compose run --rm cli setup
         ;;
 
     build)
+        shift
         handle_build "$@"
         ;;
 
@@ -284,10 +260,6 @@ case "$TARGET" in
             echo "--- Firecrawl ---"
             "$DIR/services/firecrawl/run.sh" status || true
         fi
-        ;;
-
-    firewall)
-        handle_firewall "$ACTION"
         ;;
 
     help|-h|--help)

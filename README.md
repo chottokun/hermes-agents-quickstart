@@ -18,8 +18,8 @@ A configuration repository for safely, cleanly, and easily running [Hermes Agent
 
 ## Key Features & Security Design
 
-1. **Non-Invasive to Host OS (No iptables required by default)**
-   - Operates cleanly without modifying host OS network configs or routing.
+1. **Non-Invasive to Host OS (No sudo or iptables required)**
+   - Operates completely without host OS or network modification, running entirely with non-root user permissions (docker group).
 2. **Minimal Port Exposure (WebUI Loopback Only)**
    - Only the WebUI (`127.0.0.1:9119:9119`) is bound to host localhost. No exposure to local LAN.
    - SearXNG (8080), Firecrawl (3002), and Gateway API (8642) are confined to internal bridge container networking (`expose`).
@@ -42,7 +42,7 @@ hermes-agents-quickstart/
 ├── docker-compose.build.yml # (Dev) Local build overlay
 ├── .env.example             # Environment variable template
 ├── .gitignore               # Git exclusion rules
-├── manage.sh                # Unified management script (Profiles / build / firewall)
+├── manage.sh                # Unified management script (Profiles / build)
 ├── config.yaml.example      # Configuration template for Hermes Agent
 ├── data/                    # Persistent data mount (/opt/data)
 ├── services/                # Self-hosted search & extract services
@@ -138,18 +138,6 @@ The Web Dashboard is bound to `127.0.0.1:9119` and not exposed to the LAN. Acces
 ssh -N -L 9119:localhost:9119 <user>@<server-host>
 ```
 Then navigate to `http://localhost:9119` in your browser.
-
----
-
-## Optional: Host iptables LAN Isolation
-
-To enforce L3/L4 packet dropping towards private subnets:
-
-```bash
-./manage.sh firewall on
-./manage.sh firewall status
-./manage.sh firewall off
-```
 
 ---
 

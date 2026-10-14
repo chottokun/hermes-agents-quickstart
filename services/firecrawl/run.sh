@@ -15,10 +15,15 @@ ACTION="${1:-up}"
 
 case "$ACTION" in
     up)
-        # 内部ネットワークが存在しない場合は作成
+        # 内部ネットワークが存在しない場合は作成（Compose とのラベル不一致を防止）
         if ! docker network inspect mi_hermes_internal >/dev/null 2>&1; then
             echo "内部ネットワーク mi_hermes_internal を作成しています..."
-            docker network create mi_hermes_internal
+            if [ -f "$DIR/../../docker-compose.yml" ]; then
+                (cd "$DIR/../.." && docker compose --profile "" create --no-build gateway >/dev/null 2>&1 || true)
+            fi
+            if ! docker network inspect mi_hermes_internal >/dev/null 2>&1; then
+                docker network create --label com.docker.compose.network=agent_internal mi_hermes_internal
+            fi
         fi
         echo "Firecrawl コンテナ群を起動しています..."
         docker compose up -d

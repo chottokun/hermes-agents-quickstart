@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 networks:
   agent_internal:
     driver: bridge
@@ -26,6 +32,9 @@ services:
     environment:
       - HERMES_UID=${HERMES_UID:-1000}
       - HERMES_GID=${HERMES_GID:-1000}
+      - SEARXNG_URL=${SEARXNG_URL:-http://searxng:8080}
+      - FIRECRAWL_API_URL=${FIRECRAWL_API_URL:-http://firecrawl:3002}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY:-fc-local-key}
       - HERMES_DASHBOARD=1
       - HERMES_DASHBOARD_HOST=0.0.0.0
       - HERMES_DASHBOARD_PORT=9119
@@ -42,6 +51,7 @@ services:
       - SETUID
     security_opt:
       - no-new-privileges:true
+    logging: *default-logging
     deploy:
       resources:
         limits:
@@ -66,6 +76,9 @@ services:
     environment:
       - HERMES_UID=${HERMES_UID:-1000}
       - HERMES_GID=${HERMES_GID:-1000}
+      - SEARXNG_URL=${SEARXNG_URL:-http://searxng:8080}
+      - FIRECRAWL_API_URL=${FIRECRAWL_API_URL:-http://firecrawl:3002}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY:-fc-local-key}
     cap_drop:
       - ALL
     cap_add:
@@ -76,6 +89,11 @@ services:
       - SETUID
     security_opt:
       - no-new-privileges:true
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     command: ["hermes"]
 
   # ----------------------------------------------------
@@ -97,8 +115,14 @@ services:
       - FORCE_OWNERSHIP=false
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
     security_opt:
       - no-new-privileges:true
+    logging: *default-logging
     deploy:
       resources:
         limits:

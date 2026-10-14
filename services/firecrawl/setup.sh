@@ -8,7 +8,7 @@ echo "=== Firecrawl Setup ==="
 
 if [ ! -d "$SRC_DIR" ]; then
     echo "Cloning official Firecrawl repository..."
-    git clone https://github.com/mendableai/firecrawl.git "$SRC_DIR"
+    git clone --depth 1 https://github.com/mendableai/firecrawl.git "$SRC_DIR"
 else
     echo "Firecrawl repository already exists in $SRC_DIR"
 fi

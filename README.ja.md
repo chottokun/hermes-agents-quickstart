@@ -18,8 +18,8 @@
 
 ## 主な特徴とセキュリティ設計
 
-1. **ホストOS非破壊（iptables等不使用）**
-   - ホストOSの設定やルーティングを汚さずに動作します。
+1. **ホストOS非破壊（sudo不要・iptables等不使用）**
+   - ホストOSの設定やルーティングを一切変更せず、一般ユーザー権限（dockerグループ）だけで全操作が完結します。
 2. **ポート公開は WebUI（9119）のみ・ループバック限定**
    - WebUI のみ `127.0.0.1:9119:9119` でホストのループバックにバインド（LAN露出を完全遮断）。
    - SearXNG（8080）、Firecrawl（3002）、内部API（8642）は内部ブリッジネットワーク（`mi_hermes_internal`）のコンテナ間通信（`expose`）に完全隔離。
@@ -43,7 +43,7 @@ hermes-agents-quickstart/
 ├── docker-compose.build.yml # (開発用) ローカルビルド用オーバーレイ
 ├── .env.example             # 環境変数テンプレート（UID/GID, Basic認証, 内部DNS）
 ├── .gitignore               # Git 除外設定
-├── manage.sh                # 統合管理スクリプト (Profiles / build / ファイアウォール対応)
+├── manage.sh                # 統合管理スクリプト (Profiles / build 対応)
 ├── config.yaml.example      # Hermes Agent 設定テンプレート
 ├── data/                    # Hermes データディレクトリ（コンテナ側 /opt/data）
 │   ├── .gitkeep             # ディレクトリ保持用（実行時データはGit除外）
@@ -156,23 +156,6 @@ ssh -N -L 9119:localhost:9119 <ユーザー名>@<サーバーホスト>
 ```
 
 接続後、クライアント側のブラウザで `http://localhost:9119` を開き、`.env` で設定した Basic 認証情報でログインします。
-
----
-
-## オプション: ホスト iptables によるローカルLAN遮断
-
-エージェント内蔵のSSRF保護に加え、ホストOSのパケットフィルタ（L3/L4）でも確実にローカルLAN宛てのパケットを遮断したい場合のオプトイン機能です。
-
-```bash
-# ローカルLAN (192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12) 宛てパケットをDROP
-./manage.sh firewall on
-
-# ファイアウォール適用状況の確認
-./manage.sh firewall status
-
-# ルールの解除
-./manage.sh firewall off
-```
 
 ---
 
