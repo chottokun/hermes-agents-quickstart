@@ -16,6 +16,7 @@ hermes-agents-quickstart 統合管理スクリプト
   run (または up) 前回起動した構成で即座に再開 (初回は推奨構成 search up を起動)
 
 目的別起動 (Compose Profiles):
+  bot           【ボット常駐・軽量】Discord等ボット + SearXNG (WebUIなし・メモリ約100MB節約)
   search        【推奨・軽量】WebUI + SearXNG (Web検索対応)
   gateway       WebUI 最小構成 (メタ検索・Web抽出なし)
   full          全部入り完全構成 (WebUI + SearXNG + Firecrawl)
@@ -41,6 +42,7 @@ hermes-agents-quickstart 統合管理スクリプト
 
 コマンド例:
   ./manage.sh run              前回の起動構成を再開 (ワンコマンド起動)
+  ./manage.sh bot up           Discord等ボット常駐 (WebUI無効・メモリ節約)
   ./manage.sh search up        WebUI + SearXNG を起動 (推奨)
   ./manage.sh search down      WebUI + SearXNG を停止
   ./manage.sh gateway up       WebUI のみ起動
@@ -141,6 +143,32 @@ case "$TARGET" in
     # --------------------------------------------------
     # 目的別起動オプション (Profiles)
     # --------------------------------------------------
+    bot)
+        case "$ACTION" in
+            up)
+                ensure_config
+                save_last_run "bot" "up"
+                echo "Hermes Bot + SearXNG (WebUIなし・メモリ節約構成) を起動しています..."
+                HERMES_DASHBOARD=0 docker compose --profile search up -d
+                echo "起動完了: Discord等のボットがバックグラウンド常駐しました (WebUI: 無効 / SearXNG: 内部DNS: searxng:8080)"
+                ;;
+            down)
+                echo "Hermes Bot + SearXNG を停止しています..."
+                docker compose --profile search down
+                ;;
+            logs)
+                docker compose --profile search logs -f gateway
+                ;;
+            status)
+                docker compose --profile search ps
+                ;;
+            *)
+                echo "不明なコマンドです: $ACTION (up, down, logs, status)"
+                exit 1
+                ;;
+        esac
+        ;;
+
     search)
         case "$ACTION" in
             up)

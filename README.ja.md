@@ -91,21 +91,28 @@ cp .env.example .env
 > **ワンコマンド起動・再開 (`./manage.sh run`)**
 > `./manage.sh run`（または `./manage.sh up`）を実行すると、**前回起動したオプション（構成）を自動で記憶して即座に再開**します（初回は推奨構成の `search up` が起動）。日常の起動・再開はこれだけで完結します。
 
-### Option A: WebUI + SearXNG（【推奨】軽量・Web検索対応構成）
-WebUIで対話・監視しつつ、SearXNGで安全にWeb検索を行える推奨バランス構成です。
+### Option A: ボット常駐 (【推奨・軽量】Discord等ボット + SearXNG、WebUI無効)
+Discord や Telegram などのメッセージングボットとして常駐稼働させる場合に最適です。WebUI を無効化（ヘッドレス）し、**メモリを約 80〜150MB 節約** できます。
+```bash
+./manage.sh bot up
+# ログ確認: ./manage.sh bot logs (または docker compose logs -f gateway)
+```
+
+### Option B: WebUI + SearXNG (WebUIダッシュボード監視 + Web検索対応)
+ブラウザ上の WebUI（`http://localhost:9119`）で対話・監視しつつ、SearXNG で安全に Web 検索を行う推奨構成です。
 ```bash
 ./manage.sh search up
 # または: docker compose --profile search up -d
 ```
 
-### Option B: WebUI 単体（外部検索なし・最小フットプリント）
+### Option C: WebUI 単体（外部検索なし・最小フットプリント）
 リソースを最小限に抑えたい場合。
 ```bash
 ./manage.sh gateway up
 # または: docker compose up -d gateway
 ```
 
-### Option C: 対話型 CLI (TUI)
+### Option D: 対話型 CLI (TUI)
 WebUI を常駐させず、ターミナルで対話したい時だけ一時起動します。Web検索（SearXNG）連動にも対応しています。
 ```bash
 # CLI 単体セッション（軽量・検索なし）
@@ -116,7 +123,7 @@ WebUI を常駐させず、ターミナルで対話したい時だけ一時起�
 # または: ./manage.sh search cli
 ```
 
-### Option D: 全部入り（Firecrawlを含む完全構成）
+### Option E: 全部入り（Firecrawlを含む完全構成）
 Web検索に加え、ローカルWeb抽出（スクレイピング・Markdown化）も含めた完全構成です。
 ```bash
 ./manage.sh full up
@@ -153,9 +160,14 @@ Hermes Agent は、対話 TUI で設定を行ったあと、`gateway` をバッ�
 
 2. **バックグラウンド常駐起動**
    ```bash
-   # Web検索（SearXNG）連動で常駐（推奨）
+   # ボット常駐（WebUI無効・メモリ約100MB節約、SearXNG検索連動）
+   ./manage.sh bot up
+
+   # または WebUI も同時起動してブラウザから監視する場合
    ./manage.sh search up
-   # またはワンコマンド再開: ./manage.sh run
+
+   # 次回以降のワンコマンド再開:
+   ./manage.sh run
    ```
    `gateway` コンテナがバックグラウンド（`-d`）で立ち上がり、Discord に自動接続してメッセージの受信・応答を開始します（`restart: unless-stopped` により、ホストや VPS 再起動時も自動復帰します）。
 

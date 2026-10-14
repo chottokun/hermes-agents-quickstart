@@ -82,19 +82,27 @@ The official image is automatically downloaded:
 > **One-Command Startup & Resume (`./manage.sh run`)**
 > Running `./manage.sh run` (or `./manage.sh up`) automatically **remembers and resumes your previously used profile configuration** (defaults to recommended `search up` on initial run). Day-to-day operation can be done with this single command.
 
-### Option A: WebUI + SearXNG ([Recommended] Balanced & Lightweight)
+### Option A: Bot Daemon ([Recommended] Discord/Messaging Bot + SearXNG, WebUI Disabled)
+Optimal for running Discord or Telegram bots 24/7. Disables the WebUI (headless mode) to **save ~80-150MB of RAM**.
+```bash
+./manage.sh bot up
+# View logs: ./manage.sh bot logs (or docker compose logs -f gateway)
+```
+
+### Option B: WebUI + SearXNG (WebUI Dashboard + Web Search)
+Access the WebUI (`http://localhost:9119`) in your browser while using SearXNG for web search.
 ```bash
 ./manage.sh search up
 # Or: docker compose --profile search up -d
 ```
 
-### Option B: WebUI Only (Minimal Footprint)
+### Option C: WebUI Only (Minimal Footprint)
 ```bash
 ./manage.sh gateway up
 # Or: docker compose up -d gateway
 ```
 
-### Option C: Interactive CLI (TUI)
+### Option D: Interactive CLI (TUI)
 Run an on-demand terminal session without a persistent WebUI container. Supports integration with SearXNG web search.
 ```bash
 # Standalone CLI session (lightweight, no web search)
@@ -105,7 +113,7 @@ Run an on-demand terminal session without a persistent WebUI container. Supports
 # Or: ./manage.sh search cli
 ```
 
-### Option D: Full Stack (With Local Web Extraction)
+### Option E: Full Stack (With Local Web Extraction)
 ```bash
 ./manage.sh full up
 ```
@@ -139,9 +147,14 @@ After configuring credentials and platform settings in the TUI, Hermes Agent can
 
 2. **Launch as Background Daemon**
    ```bash
-   # Launch with SearXNG web search (Recommended)
+   # Bot daemon (WebUI disabled, saves ~100MB RAM, SearXNG search included)
+   ./manage.sh bot up
+
+   # Or with WebUI dashboard enabled for browser monitoring
    ./manage.sh search up
-   # Or one-command resume: ./manage.sh run
+
+   # Or one-command resume:
+   ./manage.sh run
    ```
    The `gateway` service starts detached (`-d`), automatically connects to Discord, and begins listening and responding to mentions/messages. With `restart: unless-stopped`, the bot survives VPS reboots automatically.
 
