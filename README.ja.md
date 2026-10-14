@@ -138,6 +138,43 @@ Web検索に加え、ローカルWeb抽出（スクレイピング・Markdown化
 
 ---
 
+## ユースケース: Discord 等のメッセージングボット常駐運用 (24/7 稼働)
+
+Hermes Agent は、対話 TUI で設定を行ったあと、`gateway` をバックグラウンド起動することで、Discord や Telegram 等のメッセージングボットとして 24時間365日 常駐稼働させることができます。
+
+### 常駐運用の流れ
+
+1. **TUI でプラットフォーム連携を設定**
+   ```bash
+   ./manage.sh setup
+   # または: ./manage.sh cli
+   ```
+   初期ウィザードまたは対話 CLI 内で、LLM プロバイダーの API キーに加えて **Discord Bot Token** や通知先チャンネル等の設定を入力します。設定内容はすべて `data/` 配下に自動保存・永続化されます。設定完了後は TUI セッションを終了（`Ctrl+C` や `exit`）して構いません。
+
+2. **バックグラウンド常駐起動**
+   ```bash
+   # Web検索（SearXNG）連動で常駐（推奨）
+   ./manage.sh search up
+   # またはワンコマンド再開: ./manage.sh run
+   ```
+   `gateway` コンテナがバックグラウンド（`-d`）で立ち上がり、Discord に自動接続してメッセージの受信・応答を開始します（`restart: unless-stopped` により、ホストや VPS 再起動時も自動復帰します）。
+
+3. **稼働ログの確認**
+   ```bash
+   # ボットの通信・応答ログをリアルタイム表示
+   docker compose logs -f gateway
+
+   # 稼働ステータス確認
+   ./manage.sh status
+   ```
+
+4. **常駐の停止**
+   ```bash
+   ./manage.sh down
+   ```
+
+---
+
 ## 停止とステータス確認・更新
 
 ```bash

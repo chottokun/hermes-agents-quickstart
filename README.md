@@ -124,6 +124,43 @@ To customize or build from source:
 
 ---
 
+## Use Case: 24/7 Messaging Bot Daemon (Discord / Telegram)
+
+After configuring credentials and platform settings in the TUI, Hermes Agent can run as a background daemon (`gateway`) to serve as an always-on Discord or Telegram bot.
+
+### Workflow
+
+1. **Configure Platform Credentials via TUI**
+   ```bash
+   ./manage.sh setup
+   # Or: ./manage.sh cli
+   ```
+   Follow the wizard to input your LLM provider API keys as well as your **Discord Bot Token** and channel settings. All configurations are automatically persisted to `./data`. You can safely exit the TUI session once finished.
+
+2. **Launch as Background Daemon**
+   ```bash
+   # Launch with SearXNG web search (Recommended)
+   ./manage.sh search up
+   # Or one-command resume: ./manage.sh run
+   ```
+   The `gateway` service starts detached (`-d`), automatically connects to Discord, and begins listening and responding to mentions/messages. With `restart: unless-stopped`, the bot survives VPS reboots automatically.
+
+3. **Monitor Logs & Status**
+   ```bash
+   # Real-time bot conversation & connection logs
+   docker compose logs -f gateway
+
+   # Check container status
+   ./manage.sh status
+   ```
+
+4. **Stop the Bot Daemon**
+   ```bash
+   ./manage.sh down
+   ```
+
+---
+
 ## Stop, Status & Update
 
 ```bash
