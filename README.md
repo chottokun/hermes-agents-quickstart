@@ -141,6 +141,19 @@ Then navigate to `http://localhost:9119` in your browser.
 
 ---
 
+## Production / VPS Deployment Tips
+
+1. **Change Default Passwords & Secrets**
+   When creating your `.env` on a VPS or remote host, generate random strings for:
+   - `HERMES_DASHBOARD_BASIC_AUTH_PASSWORD`: WebUI Basic Authentication password
+   - `SEARXNG_SECRET`: SearXNG session encryption secret (can be set directly in `.env`)
+
+2. **Switching `data/config.yaml` for Full Stack (Firecrawl)**
+   The auto-initialized `data/config.yaml` defaults to `extract_backend: "none"` optimized for the lightweight `search` profile.
+   When running the full stack with Firecrawl (`./manage.sh full up`), change `extract_backend` to `"firecrawl"` in `data/config.yaml`.
+
+---
+
 ## License
 
 [MIT License](LICENSE)

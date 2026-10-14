@@ -200,6 +200,7 @@ case "$TARGET" in
                 "$DIR/services/firecrawl/run.sh" up
                 echo "全サービスが内部ネットワーク上で起動しました。"
                 echo "WebUI: http://127.0.0.1:9119"
+                echo 'ヒント: Firecrawl による本文抽出を有効にするには、data/config.yaml の extract_backend を "firecrawl" に設定してください。'
                 ;;
             down)
                 echo "全サービスを停止しています..."

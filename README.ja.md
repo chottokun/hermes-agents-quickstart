@@ -159,6 +159,19 @@ ssh -N -L 9119:localhost:9119 <ユーザー名>@<サーバーホスト>
 
 ---
 
+## 本番・VPS 運用のポイント
+
+1. **初期パスワード・シークレットの変更**
+   VPS 等に配置して `.env` を作成する際、以下を手元でランダムな文字列に変更しておくことを推奨します（万が一のアクセス制御ミス時にも安全です）。
+   - `HERMES_DASHBOARD_BASIC_AUTH_PASSWORD`: WebUI の Basic 認証パスワード
+   - `SEARXNG_SECRET`: SearXNG のセッション暗号化キー（`.env` に記述することで安全に上書き可能）
+
+2. **full 構成（Firecrawl）利用時の `data/config.yaml` 切り替え**
+   自動初期化される `data/config.yaml` は、推奨構成に合わせて `extract_backend: "none"`（SearXNG のみ）になっています。
+   Firecrawl を含むフル構成（`./manage.sh full up`）で Web ページ本文抽出・Markdown 変換を行う場合は、`data/config.yaml` の `extract_backend` を `"firecrawl"` に変更してください。
+
+---
+
 ## ライセンス
 
 [MIT License](LICENSE)

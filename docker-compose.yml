@@ -112,6 +112,7 @@ services:
       - "8080"
     environment:
       - SEARXNG_BASE_URL=http://searxng:8080/
+      - SEARXNG_SECRET=${SEARXNG_SECRET:-ultrasecretkey_please_change_in_production}
       - FORCE_OWNERSHIP=false
     cap_drop:
       - ALL
