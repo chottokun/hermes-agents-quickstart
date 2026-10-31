@@ -1,6 +1,9 @@
 # hermes-agents-quickstart
 
-[English Document](README.md)
+[![CI](https://github.com/chottokun/hermes-agents-quickstart/actions/workflows/ci.yml/badge.svg)](https://github.com/chottokun/hermes-agents-quickstart/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+[English](README.md) | [日本語](README.ja.md)
 
 ローカル環境で [Hermes Agent](https://github.com/NousResearch/hermes-agent) を Docker Compose を用いて安全・軽量・クリーンに実行・管理するための設定リポジトリです。
 
