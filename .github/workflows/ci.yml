@@ -79,21 +79,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Run Trivy vulnerability & misconfig scanner
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-          format: 'table'
-          exit-code: '0'
-
       - name: Run Trivy SARIF generation
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
+          scanners: 'vuln,misconfig'
           severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
           format: 'sarif'
           output: 'trivy-results.sarif'
           exit-code: '0'
@@ -105,3 +98,14 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy'
+
+      - name: Run Trivy vulnerability & misconfig scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln,misconfig'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: '1'
