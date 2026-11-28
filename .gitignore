@@ -2,6 +2,8 @@
 # 環境変数・認証・シークレット情報（公開禁止）
 # --------------------------------------------------
 .env
+.env.*
+!.env.example
 *.env
 *.key
 *.pem
@@ -36,3 +38,13 @@ Thumbs.db
 # セルフホストサービス（外部リポジトリ・クローン物）
 # --------------------------------------------------
 services/firecrawl/src/
+
+# --------------------------------------------------
+# ローカル Compose オーバーライド・バックアップファイル
+# --------------------------------------------------
+docker-compose.override.yml
+docker-compose.override.yaml
+compose.override.yml
+compose.override.yaml
+*.bak
+*.bak-*
